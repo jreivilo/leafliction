@@ -50,42 +50,42 @@ def apply_radial_distortion(image, strength=1):
 
 	return new_image
 
-def apply_augmentations(file_path):
-	# Load the image
-	original_image = Image.open(file_path)
-	base, extension = os.path.splitext(file_path)
-	base = base.replace('./', '')  # Adjusting base for saving files
+def apply_augmentations(file_path: str) -> None:
+    # Load the original image
+    original_image = Image.open(file_path)
+    base, extension = os.path.splitext(file_path)
 
-	# Flip the image horizontally
-	flipped_image = ImageOps.mirror(original_image)
-	flipped_image.save(f'{base}_flip{extension}')
+    # Get the original and parent directories
+    original_dir = os.path.dirname(file_path)
+    parent_dir = os.path.dirname(original_dir)
 
-	# Rotate the image by 90 degrees
-	rotated_image = original_image.rotate(90, expand=True)
-	rotated_image.save(f'{base}_rotate{extension}')
+    # Create the `augmented_directory` in the parent directory with a subfolder named like the current folder
+    augmented_directory = os.path.join(parent_dir, 'augmented_directory', os.path.basename(original_dir))
+    os.makedirs(augmented_directory, exist_ok=True)
 
-	# blur the image
-	blurred_image = original_image.filter(ImageFilter.BLUR)
-	blurred_image.save(f'{base}_blur{extension}')
+    # Apply augmentations
+    augmentations = {
+        "_flip": ImageOps.mirror(original_image),
+        "_rotate": original_image.rotate(90, expand=True),
+        "_blur": original_image.filter(ImageFilter.BLUR),
+        "_contrast": ImageOps.autocontrast(original_image),
+        "_crop": original_image.crop((
+            original_image.width / 4, original_image.height / 4,
+            3 * original_image.width / 4, 3 * original_image.height / 4
+        )),
+        "_illuminate": ImageOps.solarize(original_image)
+    }
 
-	# contrast the image
-	contrasted_image = ImageOps.autocontrast(original_image)
-	contrasted_image.save(f'{base}_contrast{extension}')
+    # Save each augmented image in both the original folder and `augmented_directory`
+    for suffix, img in augmentations.items():
+        # Path for the original directory
+        save_path_original = f'{base}{suffix}{extension}'
+        img.save(save_path_original)
 
-	# Crop the image (cropping the central part)
-	width, height = original_image.size
-	left = width / 4
-	top = height / 4
-	right = 3 * width / 4
-	bottom = 3 * height / 4
-	cropped_image = original_image.crop((left, top, right, bottom))
-	cropped_image.save(f'{base}_crop{extension}')
+        # Path for `augmented_directory`
+        save_path_augmented = os.path.join(augmented_directory, f'{os.path.basename(base)}{suffix}{extension}')
+        img.save(save_path_augmented)
 
-	# illuminate the image
-	illuminated_image = ImageOps.solarize(original_image)
-	illuminated_image.save(f'{base}_illuminate{extension}')
-	
- 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Apply various augmentations to an image.")
 	parser.add_argument("file_path", type=str, help="Path to the image file to be augmented")
