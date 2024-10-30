@@ -1,6 +1,8 @@
 from plantcv import plantcv as pcv
 import matplotlib.pyplot as plt
+import altair as alt
 import math
+import os
 import numpy as np
 import cv2
 import argparse
@@ -48,39 +50,79 @@ def historgam_pixel_intensity(original_image, mask):
     pcv.params.debug = "plot"
     hist_figure, hist_data = pcv.visualize.histogram(img=original_image, hist_data=True)
     return hist_figure, hist_data
+
+# Save transformations
+def save_transformation_results(base_output_path, transformations):
+    os.makedirs(base_output_path, exist_ok=True)
+    for name, image in transformations.items():
+        save_path = os.path.join(base_output_path, f"{name}.png")
+        
+        if isinstance(image, plt.Figure):  # For matplotlib figures
+            image.savefig(save_path)
+        elif isinstance(image, np.ndarray):  # For OpenCV images (numpy array)
+            cv2.imwrite(save_path, image)
+        elif isinstance(image, alt.Chart):  # For Altair charts
+            image.save(save_path)  # Save as PNG or HTML based on `save_path` extension
+        else:
+            print(f"Skipping unsupported format for {name}")
+
+# Apply transformations and save results
+def apply_transformations(image_path, base_output_dir="plot/transformation"):
+    pcv.params.debug = "none"
+   
+    print(f"Processing image: {os.path.basename(image_path)}")
+
+    original_image = cv2.imread(image_path)
     
+    # Extract the type of image and image name
+    image_type = os.path.basename(os.path.dirname(image_path))
+    image_name = os.path.splitext(os.path.basename(image_path))[0]
     
+    # Define output directory based on image type and name
+    output_dir = os.path.join(base_output_dir, image_type, image_name)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Perform transformations
+    gray_image = convert_to_grayscale(original_image)
+    binary_image = thresholding_for_leaf_shape(gray_image)
+    leaf_image = extract_leaf_shape(original_image, binary_image)
+    leaf_shape_green_background = add_leaf_image_green_to_original_image(original_image, leaf_image)
+    leaf_shape_analysis = analyse_leaf_shape(original_image, binary_image)
+    edges = pcv.canny_edge_detect(original_image)
+    hist_figure, _ = historgam_pixel_intensity(original_image, binary_image)
+
+    # Organize transformations into a dictionary
+    transformations = {
+        "gray_image": gray_image,
+        "binary_image": binary_image,
+        "leaf_image": leaf_image,
+        "leaf_shape_green_background": leaf_shape_green_background,
+        "leaf_shape_analysis": leaf_shape_analysis,
+        "edges": edges,
+        "histogram": hist_figure
+    }
+
+    # Save transformations to the specified output directory
+    save_transformation_results(output_dir, transformations)
+
+# Main function for handling input
+def main(input_path, base_output_dir="plot/transformation"):
+    if os.path.isfile(input_path):
+        apply_transformations(input_path, base_output_dir)
+    elif os.path.isdir(input_path):
+        for root, _, files in os.walk(input_path):
+            for file in files:
+                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    image_path = os.path.join(root, file)
+                    apply_transformations(image_path, base_output_dir)
+    else:
+        print(f"The path {input_path} does not exist.")
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description="Apply various augmentations to an image.")
-	parser.add_argument("file_path", type=str, help="Path to the image file to be augmented")
-	args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Apply various augmentations to an image or directory of images.")
+    parser.add_argument("input_path", type=str, help="Path to the image file or directory of images to be transformed.")
+    parser.add_argument("-o", "--output_dir", type=str, help="Directory to save transformed images if input is a directory.")
+    args = parser.parse_args()
 
-	file_path = args.file_path
-	original_image = cv2.imread(file_path)
-
-	gray_image = convert_to_grayscale(original_image)
-	cv2.imwrite('plot/transformation/gray_image.png', gray_image)
-
-	binary_image = thresholding_for_leaf_shape(gray_image)
-	cv2.imwrite('plot/transformation/binary_image.png', binary_image)
-
-	leaf_image = extract_leaf_shape(original_image, binary_image)
-	cv2.imwrite('plot/transformation/leaf_image.png', leaf_image)
-
-	leaf_shape_green_background = add_leaf_image_green_to_original_image(original_image, leaf_image)
-	cv2.imwrite('plot/transformation/leaf_shape_green_background.png', leaf_shape_green_background)
-
-	leaf_shape_analysis = analyse_leaf_shape(original_image, binary_image)
-	cv2.imwrite('plot/transformation/leaf_shape_analysis.png', leaf_shape_analysis)
-
-	# leaf_marked_image = acute_marking(original_image, binary_image)
-	# # pcv.plot_image(leaf_marked_image, title="Leaf Marked Image")
-
-	edges = pcv.canny_edge_detect(original_image)
-	cv2.imwrite('plot/transformation/edges.png', edges)
-
-
-	hist_figure, hist_data = historgam_pixel_intensity(original_image, binary_image)
-	hist_figure.save('plot/transformation/hist_figure.png')
-	# np.savetxt("plot/transformation/hist_data.csv", hist_data, delimiter=",")
+    output_dir = args.output_dir if args.output_dir else "plot/transformation"
+    main(args.input_path, output_dir)
