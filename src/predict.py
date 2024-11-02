@@ -104,4 +104,3 @@ if __name__ == "__main__":
 	# Evaluate the model
 	accuracy = predict_and_evaluate(model, test_generator)
 	print(f"Accuracy on Test Data: {accuracy * 100:.2f}%")
-
