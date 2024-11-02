@@ -76,16 +76,9 @@ def build_model():
         MaxPooling2D(2, 2),
         Conv2D(64, (3, 3), activation='relu'),
         MaxPooling2D(2, 2),
-        Conv2D(32, (3, 3), activation='relu'),
-        MaxPooling2D(2, 2),
         Flatten(),
-        Dense(512, activation='relu'),
-        Dropout(0.2),
         Dense(256, activation='relu'),
-        Dropout(0.2),
         Dense(128, activation='relu'),
-        Dense(64, activation='relu'),
-        Dropout(0.3),
         Dense(8, activation='softmax')  # Number of classes
     ])
     return model
@@ -155,21 +148,22 @@ if __name__ == "__main__":
                                        zoom_range=0.1, # zooming the images
                                        horizontal_flip=True, #randomly flipping the images
                                        fill_mode='nearest', # filling the missing pixels with the nearest pixel
-                                       preprocessing_function=extract_leaf
+                                       preprocessing_function=extract_leaf,
                                        )
     validation_datagen = ImageDataGenerator(rescale=1.0 / 255.0,
-                                            preprocessing_function=extract_leaf
+                                            preprocessing_function=extract_leaf,
                                             )# standardizing the pixel values
     
     # Flow training images in batches of 20 using train_datagen generator
     train_generator = train_datagen.flow_from_directory('train',
-                                                        batch_size=50,
+                                                        batch_size=20,
                                                         class_mode='categorical', # sparse categorical crossentropy
-                                                        target_size=(250, 250)) # resizing the images to 250x250
+                                                        target_size=(250, 250),
+                                                        seed=42) # resizing the images to 250x250
     print("Train generator label value counts:", train_generator.labels)
     
     # Flow validation images in batches of 20 using test_datagen generator
-    validation_generator = validation_datagen.flow_from_directory('test',
+    validation_generator = validation_datagen.flow_from_directory('Unit_test_all',
                                                                   class_mode='categorical',
                                                                   target_size=(250, 250),
                                                                   shuffle=True
