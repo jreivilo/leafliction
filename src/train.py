@@ -77,8 +77,8 @@ def build_model():
         Conv2D(64, (3, 3), activation='relu'),
         MaxPooling2D(2, 2),
         Flatten(),
-        Dense(512, activation='relu'),
-        Dropout(0.3),
+        Dense(256, activation='relu'),
+        Dense(128, activation='relu'),
         Dense(8, activation='softmax')  # Number of classes
     ])
     return model
@@ -124,9 +124,9 @@ def extract_leaf(original_image):
 
 if __name__ == "__main__":
     
-    copy_and_process_images('images', 'images_transformed')
+    # copy_and_process_images('images', 'images_transformed')
     
-    split_data_into_train_test('images', 'train', 'test')
+    # split_data_into_train_test('images', 'train', 'test')
     
     # # #clean the directories
     shutil.rmtree('images_transformed')
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     model = build_model()
     
     # # Compile the model
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
     
     # Create an ImageDataGenerator and do Image Augmentation
@@ -148,23 +148,23 @@ if __name__ == "__main__":
                                        zoom_range=0.1, # zooming the images
                                        horizontal_flip=True, #randomly flipping the images
                                        fill_mode='nearest', # filling the missing pixels with the nearest pixel
-                                       preprocessing_function=extract_leaf
+                                       preprocessing_function=extract_leaf,
                                        )
     validation_datagen = ImageDataGenerator(rescale=1.0 / 255.0,
-                                            preprocessing_function=extract_leaf
+                                            preprocessing_function=extract_leaf,
                                             )# standardizing the pixel values
     
     # Flow training images in batches of 20 using train_datagen generator
     train_generator = train_datagen.flow_from_directory('train',
                                                         batch_size=20,
-                                                        class_mode='sparse', # sparse categorical crossentropy
-                                                        target_size=(250, 250)) # resizing the images to 250x250
+                                                        class_mode='categorical', # sparse categorical crossentropy
+                                                        target_size=(250, 250),
+                                                        seed=42) # resizing the images to 250x250
     print("Train generator label value counts:", train_generator.labels)
     
     # Flow validation images in batches of 20 using test_datagen generator
-    validation_generator = validation_datagen.flow_from_directory('test',
-                                                                  batch_size=20,
-                                                                  class_mode='sparse',
+    validation_generator = validation_datagen.flow_from_directory('Unit_test_all',
+                                                                  class_mode='categorical',
                                                                   target_size=(250, 250),
                                                                   shuffle=True
                                                                   )
@@ -179,4 +179,5 @@ if __name__ == "__main__":
     
     #save the model
     model.save('model.h5')
+    
     
