@@ -29,7 +29,7 @@ def copy_and_process_images(original_folder_path, new_folder_path):
                     shutil.copy2(original_file_path, new_file_path)
 
                     # Apply transformations to the image in its new location
-                    apply_augmentations(new_file_path)
+                    apply_augmentations(new_file_path, save_to_augmented_dir=False)
 
                     # Update progress
                     pbar.update(1)
@@ -50,7 +50,7 @@ def apply_radial_distortion(image, strength=1):
 
 	return new_image
 
-def apply_augmentations(file_path: str) -> None:
+def apply_augmentations(file_path: str, save_to_augmented_dir: bool = False) -> None:
     # Load the original image
     original_image = Image.open(file_path)
     base, extension = os.path.splitext(file_path)
@@ -60,8 +60,9 @@ def apply_augmentations(file_path: str) -> None:
     parent_dir = os.path.dirname(original_dir)
 
     # Create the `augmented_directory` in the parent directory with a subfolder named like the current folder
-    augmented_directory = os.path.join(parent_dir, 'augmented_directory', os.path.basename(original_dir))
-    os.makedirs(augmented_directory, exist_ok=True)
+    if save_to_augmented_dir:
+        augmented_directory = os.path.join(parent_dir, 'augmented_directory', os.path.basename(original_dir))
+        os.makedirs(augmented_directory, exist_ok=True)
 
     # Apply augmentations
     augmentations = {
@@ -83,12 +84,13 @@ def apply_augmentations(file_path: str) -> None:
         img.save(save_path_original)
 
         # Path for `augmented_directory`
-        save_path_augmented = os.path.join(augmented_directory, f'{os.path.basename(base)}{suffix}{extension}')
-        img.save(save_path_augmented)
+        if save_to_augmented_dir:
+            save_path_augmented = os.path.join(augmented_directory, f'{os.path.basename(base)}{suffix}{extension}')
+            img.save(save_path_augmented)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Apply various augmentations to an image.")
 	parser.add_argument("file_path", type=str, help="Path to the image file to be augmented")
 	args = parser.parse_args()
 
-	apply_augmentations(args.file_path)
+	apply_augmentations(args.file_path, save_to_augmented_dir=True)
