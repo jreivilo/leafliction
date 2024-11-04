@@ -20,6 +20,11 @@ def generate_charts(directory):
 
 	plant_type, count = zip(*plant_type_counts.items())
 	last_directory = os.path.basename(root_dir)
+
+	# Define the output directory for charts
+	output_dir = os.path.join("plot", "distribution", last_directory)
+	os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
 	# Now we have the counts for each plant type, we can generate charts
 	# Generate pie chart
 	labels = plant_type_counts.keys()
@@ -28,7 +33,7 @@ def generate_charts(directory):
 	ax1.pie(sizes, labels=labels, autopct='%1.1f%%')
 	ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 	plt.title(f'{last_directory} class distribution')
-	plt.savefig(f'plot/{last_directory}_pie_chart.png')
+	plt.savefig(os.path.join(output_dir, f"{last_directory}_pie_chart.png"))
 		
 	# Generate bar chart
 	fig2, ax2 = plt.subplots()
@@ -38,7 +43,7 @@ def generate_charts(directory):
 	plt.ylabel('Count')
 	plt.xticks(rotation=45)
 	plt.tight_layout()
-	plt.savefig(f'plot/{last_directory}_bar_chart.png')
+	plt.savefig(os.path.join(output_dir, f"{last_directory}_bar_chart.png"))
 		
 	# print("Charts have been generated.")
 
