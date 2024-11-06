@@ -1,4 +1,5 @@
 from PIL import Image, ImageOps, ImageTransform, ImageFilter
+from PIL import Image, ImageOps, ImageTransform, ImageFilter
 import os
 import argparse
 from tqdm import tqdm
@@ -83,44 +84,6 @@ def apply_augmentations(file_path: str, save_to_augmented_dir: bool = False) -> 
             os.makedirs(augmented_directory, exist_ok=True)
             save_path_augmented = os.path.join(augmented_directory, f'{os.path.basename(base)}{suffix}{extension}')
             img.save(save_path_augmented)
-
-# def apply_augmentations(file_path: str, save_to_augmented_dir: bool = False) -> None:
-#     # Load the original image
-#     original_image = Image.open(file_path)
-#     base, extension = os.path.splitext(file_path)
-
-#     # Get the original and parent directories
-#     original_dir = os.path.dirname(file_path)
-#     parent_dir = os.path.dirname(original_dir)
-
-#     # Create the `augmented_directory` in the parent directory with a subfolder named like the current folder
-#     if save_to_augmented_dir:
-#         augmented_directory = os.path.join(parent_dir, 'augmented_directory', os.path.basename(original_dir))
-#         os.makedirs(augmented_directory, exist_ok=True)
-
-#     # Apply augmentations
-#     augmentations = {
-#         "_flip": ImageOps.mirror(original_image),
-#         "_rotate": original_image.rotate(90, expand=True),
-#         "_blur": original_image.filter(ImageFilter.BLUR),
-#         "_contrast": ImageOps.autocontrast(original_image),
-#         "_crop": original_image.crop((
-#             original_image.width / 4, original_image.height / 4,
-#             3 * original_image.width / 4, 3 * original_image.height / 4
-#         )),
-#         "_illuminate": ImageOps.solarize(original_image)
-#     }
-
-#     # Save each augmented image in both the original folder and `augmented_directory`
-#     for suffix, img in augmentations.items():
-#         # Path for the original directory
-#         save_path_original = f'{base}{suffix}{extension}'
-#         img.save(save_path_original)
-
-#         # Path for `augmented_directory`
-#         if save_to_augmented_dir:
-#             save_path_augmented = os.path.join(augmented_directory, f'{os.path.basename(base)}{suffix}{extension}')
-#             img.save(save_path_augmented)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Apply various augmentations to an image.")

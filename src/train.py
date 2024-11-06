@@ -12,6 +12,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 from plantcv import plantcv as pcv
+from tensorflow.keras.optimizers import Adam
 
 def split_data_into_train_test(source_dir, train_dir, test_dir, train_ratio=0.8):
     """
@@ -133,10 +134,13 @@ if __name__ == "__main__":
     # # #create the directories
     os.makedirs('images_transformed', exist_ok=True)
 
+    # Configuration of the optimizer with an initial learning rate
+    optimizer = Adam(learning_rate=0.001)
+
     model = build_model()
     
     # # Compile the model
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
     
     # Create an ImageDataGenerator and do Image Augmentation
